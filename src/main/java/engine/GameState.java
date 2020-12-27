@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import game.StandardPieces;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import model.board.Board;
 import model.piece.Piece;
 import model.player.Player;
@@ -12,6 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class GameState {
@@ -30,6 +34,7 @@ public class GameState {
     /**
      * State of the board at this step.
      */
+    @Getter
     final Board board;
 
     /**
@@ -67,12 +72,14 @@ public class GameState {
                 for (int k = 0, getSize = pieces.size(); k < getSize; k++) {
                     Piece piece = pieces.get(k);
 
-                    final Optional<Board> moveAttempt = this.board.move(i, j, piece, nowPlaying);
-                    if (moveAttempt.isEmpty()) {
-                        continue;
-                    }
+                    for (Piece transformedPiece : piece.getDihedralOrbit()) {
+                        final Optional<Board> moveAttempt = this.board.move(i, j, transformedPiece, nowPlaying);
+                        if (moveAttempt.isEmpty()) {
+                            continue;
+                        }
 
-                    moves.add(this.createChildState(k, moveAttempt.get()));
+                        moves.add(this.createChildState(k, moveAttempt.get()));
+                    }
                 }
             }
         }
@@ -95,6 +102,45 @@ public class GameState {
     public GameState randomNextMove(Random random) {
         final List<GameState> possibleMoves = this.possibleMoves();
         return possibleMoves.get(random.nextInt(possibleMoves.size()));
+    }
+
+    public GameState bestMove(BiFunction<GameState, GameState, Double> heuristic, int depth, double pruneFactor) {
+        if (depth == 0) {
+            return this;
+        }
+
+        final List<GameState> possibleMoves = this.possibleMoves();
+        final List<Double> prelimEvals = possibleMoves.stream()
+                .map(state -> heuristic.apply(this, state))
+                .sorted()
+                .collect(Collectors.toList());
+        final double minEval = prelimEvals.get((int) (prelimEvals.size() * pruneFactor));
+
+//        if (depth == 2) {
+//            System.out.println("hey");
+//        }
+        final List<Double> evaluations = possibleMoves.parallelStream()
+//                .filter(state -> heuristic.apply(this, state) >= minEval)
+                .map(state -> heuristic.apply(this, state.bestMove(heuristic, depth - 1, pruneFactor)))
+                .collect(Collectors.toList());
+
+        // do this using BoundedExecutor instead
+//        for (GameState state : possibleMoves) {
+//            final GameState nextBestMove = state.bestMove(heuristic, depth - 1, pruneFactor);
+//            evaluations.add(heuristic.apply(nextBestMove));
+//        }
+
+        // Find highest evaluation
+        int ind = 0;
+        double best = Double.MIN_VALUE;
+        for (int i = 0; i < evaluations.size(); i++) {
+            if (evaluations.get(i) > best) {
+                best = evaluations.get(i);
+                ind = i;
+            }
+        }
+
+        return possibleMoves.get(ind);
     }
 
     private GameState createChildState(int pieceMoved, Board resultingBoard) {
@@ -132,7 +178,7 @@ public class GameState {
         return new GameState(board, nextPlayers, unplayedPieces, turnNumber);
     }
 
-    Player nowPlaying() {
+    public Player nowPlaying() {
         if (this.nextPlayers.isEmpty()) {
             return Player.NO_PLAYER;
         }

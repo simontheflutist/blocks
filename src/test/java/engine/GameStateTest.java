@@ -8,15 +8,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameStateTest {
     public static void main(String[] args) {
         GameState game = GameState.newGame();
-        Random random = new Random();
 
-        while (true) {
-            game = game.randomNextMove(random);
+        for (;;) {
+            System.out.println(game + "\n");
+            game = game.bestMove((ours, theirs) ->
+                    0.0d + theirs.getBoard().getNSquaresOccupied().get(ours.nowPlaying()),
+                    3, 0.0);
             if (game.isOver()) {
                 break;
             }
-        }
 
+        }
         System.out.println(game);
     }
+
+
 }

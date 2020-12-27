@@ -3,6 +3,8 @@ package model.piece;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -94,6 +96,20 @@ public class Piece {
 
     private Piece transpose() {
         return new Piece(this.nCols, this.nRows, this.colLocations, this.rowLocations);
+    }
+
+    public Set<Piece> getDihedralOrbit() {
+        final Set<Piece> pieces = new HashSet<>();
+        Piece piece = this;
+        for (int i = 0; i < 2; i++) {
+            piece = piece.flip(true, false);
+            for (int j = 0; j < 4; j++) {
+                piece = piece.rotate();
+                pieces.add(piece);
+            }
+        }
+
+        return pieces;
     }
 
     @Override
