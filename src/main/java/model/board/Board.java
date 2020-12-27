@@ -2,6 +2,7 @@ package model.board;
 
 import com.google.common.collect.ImmutableMap;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import model.piece.Piece;
 import model.player.Player;
 
@@ -18,6 +19,7 @@ public class Board {
     final int nCols;
     final Player[][] board;
     final Map<Player, int[]> playerToStartingCorner;
+    @Getter
     final Map<Player, Integer> nSquaresOccupied;
 
     public Board(int nRows, int nCols) {
@@ -62,7 +64,7 @@ public class Board {
                 .map(row ->
                         Arrays.stream(row)
                                 .map(Player::getDisplayName)
-                                .collect(Collectors.joining()))
+                                .collect(Collectors.joining(" ")))
                 .collect(Collectors.joining("\n"));
     }
 

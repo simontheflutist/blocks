@@ -44,7 +44,7 @@ class BoardTest {
 
     @Test
     void toArt() {
-        assertEquals("  \n  ", smallBoard.toArt());
+        assertEquals("   \n   ", smallBoard.toArt());
     }
 
     /**

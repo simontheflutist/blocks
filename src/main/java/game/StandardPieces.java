@@ -70,7 +70,7 @@ public class StandardPieces {
             ImmutableList.of(0, 1, 1, 1, 1),
             ImmutableList.of(1, 0, 1, 2, 3));
 
-    public static final List<Piece> ALL_PIECES = ImmutableList.<Piece>builder()
+    public static final ImmutableList<Piece> ALL_PIECES = ImmutableList.<Piece>builder()
             .add(PIECE_Q, PIECE_W, PIECE_E, PIECE_R, PIECE_T, PIECE_Y, PIECE_U, PIECE_I, PIECE_O, PIECE_P)
             .add(PIECE_S, PIECE_F, PIECE_G, PIECE_H, PIECE_J, PIECE_K, PIECE_L)
             .add(PIECE_Z, PIECE_X, PIECE_V, PIECE_N).build();
