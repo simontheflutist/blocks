@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class Piece {
     public final int nRows;
     public final int nCols;
-    public final int size;
+    public final int nSquares;
     public final ImmutableList<Integer> rowLocations;
     public final ImmutableList<Integer> colLocations;
 
@@ -31,7 +31,7 @@ public class Piece {
         this.nCols = nCols;
         this.rowLocations = rowLocations;
         this.colLocations = colLocations;
-        this.size = rowLocations.size();
+        this.nSquares = rowLocations.size();
     }
 
     public String toArt() {
@@ -54,7 +54,7 @@ public class Piece {
 
     public boolean[][] toArray() {
         final boolean[][] array = new boolean[nRows][nCols];
-        for (int k = 0; k < this.size; k++) {
+        for (int k = 0; k < this.nSquares; k++) {
             array[rowLocations.get(k)][colLocations.get(k)] = true;
         }
         return array;
@@ -68,7 +68,7 @@ public class Piece {
         final ImmutableList.Builder<Integer> rowLocationsBuilder = ImmutableList.builder();
         final ImmutableList.Builder<Integer> colLocationsBuilder = ImmutableList.builder();
 
-        for (int k = 0; k < this.size; k++) {
+        for (int k = 0; k < this.nSquares; k++) {
             int rowLoc = this.rowLocations.get(k);
             int colLoc = this.colLocations.get(k);
 
