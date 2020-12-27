@@ -1,7 +1,6 @@
 package model.piece;
 
 import com.google.common.collect.ImmutableList;
-import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import java.util.stream.Collectors;
  * The tile is represented as a matrix with height and width.
  * The filled-in parts are specified by giving their row, column coordinates in parallel arrays.
  */
-@ToString
 public class Piece {
     public final int nRows;
     public final int nCols;
@@ -48,7 +46,7 @@ public class Piece {
             } else {
                 sb.append(" ");
             }
-        };
+        }
         return sb;
     }
 
@@ -73,10 +71,10 @@ public class Piece {
             int colLoc = this.colLocations.get(k);
 
             if (horizontalAxis) {
-                rowLoc = this.nCols - rowLoc - 1;
+                rowLoc = this.nRows - rowLoc - 1;
             }
             if (verticalAxis) {
-                colLoc = this.nRows - colLoc - 1;
+                colLoc = this.nCols - colLoc - 1;
             }
 
             rowLocationsBuilder.add(rowLoc);

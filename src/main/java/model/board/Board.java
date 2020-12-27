@@ -104,7 +104,7 @@ public class Board {
         // Deduplicate them and then query them to make sure that none of them are occupied by this player.
 
         // Use a PQ with lexicographic sort to be nice to memory :)
-        final Queue<int[]> locations = new PriorityQueue<>();
+        final Queue<int[]> locations = new PriorityQueue<>(Board::lexicographicComparing);
         // Add all cardinal neighbors
         for (int k = 0; k < piece.nSquares; k++) {
             // Row and column by displacement
@@ -149,7 +149,7 @@ public class Board {
         // Same idea as doesNotTouchSideOfOwnPiece, except this time we are generating "sticky" squares
         // that would have to have one of the player's own squares.
 
-        final Queue<int[]> locations = new PriorityQueue<>();
+        final Queue<int[]> locations = new PriorityQueue<>(Board::lexicographicComparing);
         // Add all sticky squares (+1, +1), (+1, -1), etc.
         for (int k = 0; k < piece.nSquares; k++) {
             // Row and column by displacement
@@ -188,6 +188,17 @@ public class Board {
     }
 
     /**
+     * Comparator that prefers to scan top down, left to right
+     */
+    private static int lexicographicComparing(int[] loc1, int[] loc2) {
+        int msbDiff = loc1[0] - loc2[0];
+        if (msbDiff != 0) {
+            return msbDiff;
+        }
+        return loc1[1] - loc2[1];
+    }
+
+    /**
      * Check whether playing PIECE at row I, col J is legal, and return a board with the new state if it is.
      * @param i row
      * @param j column
@@ -198,6 +209,9 @@ public class Board {
     public Optional<Board> move(int i, int j, Piece piece, Player player) {
         if (this.isFirstMove(player)) {
             if (!this.startsInCorner(i, j, piece, player)) {
+                return Optional.empty();
+            }
+            if (!this.fitsWithoutOverlap(i, j, piece)) {
                 return Optional.empty();
             }
         } else {
@@ -242,7 +256,7 @@ public class Board {
 
         for (int k = 0; k < piece.nSquares; k++) {
             final int r = i + piece.rowLocations.get(k);
-            final int c = j + piece.rowLocations.get(k);
+            final int c = j + piece.colLocations.get(k);
 
             if (r == startingCorner[0] && c == startingCorner[1]) {
                 return true;
