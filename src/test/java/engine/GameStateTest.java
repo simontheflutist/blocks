@@ -11,13 +11,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameStateTest {
     public static void main(String[] args) throws Exception {
         GameState game = GameState.newGame();
-        BoardEvaluator evaluator = new MaterialMinusOthersEvaluator();
-        Engine engine = new Engine(evaluator, 10, 10000);
         Random random = new Random();
+        BoardEvaluator evaluator = new MaterialMinusOthersEvaluator(random);
+        Engine engine = new Engine(evaluator, 8, 500000);
 
-        for (int i = 0; i < 2; i++) {
-            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 3);
+
+        while (!game.isOver()) {
+            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 4, true);
             game = evaluatedGameState.getBestMove();
+            System.out.println("Table size: " + engine.transpositionTable.size());
             System.out.println(game);
             System.out.println(evaluator.evaluate(game));
             System.out.println();
