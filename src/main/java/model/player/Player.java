@@ -8,11 +8,12 @@ import lombok.Getter;
  */
 public enum Player {
     // colors: https://stackoverflow.com/questions/5762491/how-to-print-color-in-console-using-system-out-println
-    A("\u001B[44m" + "A " + "\033[0m"),
-    B("\u001B[42m" + "B " + "\033[0m"),
-    C("\u001B[41m" + "C " + "\033[0m"),
-    D("\u001B[43m" + "D " + "\033[0m"),
-    NO_PLAYER("\u001B[47m" + "  " + "\033[0m");
+    A( "\033[0;34m" + "█ " + "\033[0m"),
+    B("\033[0;32m" + "█ " + "\033[0m"),
+    C("\033[0;31m" + "█ " + "\033[0m"),
+    D("\033[0;33m" + "█ " + "\033[0m"),
+    NO_PLAYER("  " + "\033[0m");
+
     @Getter
     private String displayName;
     Player(String displayName) {
