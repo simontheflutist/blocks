@@ -79,7 +79,6 @@ public class GameState {
                 }
 
                 for (int k = 0, getSize = pieces.size(); k < getSize; k++) {
-
                     for (Piece transformedPiece : dihedralOrbit.get(pieces.get(k))) {
                         final Optional<Board> moveAttempt =
                                 this.board.move(i, j, transformedPiece, nowPlaying);
