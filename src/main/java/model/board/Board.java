@@ -64,7 +64,7 @@ public class Board {
                 .map(row ->
                         Arrays.stream(row)
                                 .map(Player::getDisplayName)
-                                .collect(Collectors.joining(" ")))
+                                .collect(Collectors.joining("")))
                 .collect(Collectors.joining("\n"));
     }
 
