@@ -17,22 +17,13 @@ class GameStateTest {
 
 
         while (!game.isOver()) {
-            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 1, true);
+            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 4, true);
             game = evaluatedGameState.getBestMove();
             System.out.println("Table size: " + engine.transpositionTable.size());
             System.out.println(game);
-            System.out.println(evaluator.evaluate(game));
+            System.out.println(evaluator.evaluate(game).rounded());
             System.out.println();
         }
-
-
-
-//        for (;;) {
-//            System.out.println(game + "\n");
-//            game =
-//
-//        }
-//        System.out.println(game);
     }
 
 

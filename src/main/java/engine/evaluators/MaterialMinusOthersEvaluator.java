@@ -19,7 +19,7 @@ public class MaterialMinusOthersEvaluator implements BoardEvaluator {
         EnumMap<Player, Double> evals = new EnumMap<>(Player.class);
         Map<Player, Integer> squaresOccupied = state.getBoard().getNSquaresOccupied();
         for (Player player : squaresOccupied.keySet()) {
-            double eval = random.nextInt(10) / 10;
+            double eval = random.nextDouble() / 2;
             for (Player otherPlayer : squaresOccupied.keySet()) {
                 if (otherPlayer.equals(Player.NO_PLAYER)) {
                     continue;

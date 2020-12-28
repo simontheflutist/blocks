@@ -100,7 +100,10 @@ public class GameState {
     }
 
     private GameState pass() {
-        return new GameState(board, nextPlayers.subList(1, nextPlayers.size()), unplayedPieces, turnNumber + 1);
+        return new GameState(board,
+                nextPlayers.isEmpty() ? nextPlayers : nextPlayers.subList(1, nextPlayers.size()),
+                unplayedPieces,
+                turnNumber + 1);
     }
 
     public boolean isOver() {
