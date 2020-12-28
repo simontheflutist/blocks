@@ -30,7 +30,7 @@ public class Engine {
         return CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL).maximumSize(TRANSPOSITION_CACHE_SIZE)
                 .build(new CacheLoader<>() {
             @Override
-            public EvaluatedGameState load(EvaluationTask key) {
+            public EvaluatedGameState load(EvaluationTask key) throws Exception {
                 return Engine.this.evaluate(key.getGameState(), key.getDepth());
             }
         });
@@ -39,7 +39,7 @@ public class Engine {
     /**
      * Sort by highest eval first.
      */
-    private static Comparator<EvaluatedGameState> bestForPlayer(Player nowPlaying) {
+    private static Comparator<EvaluatedGameState> bestIsLeast(Player nowPlaying) {
         return Comparator.comparingDouble(evaluatedGameState ->
                 -1 * evaluatedGameState.getEvaluation().getScores().get(nowPlaying));
     }
@@ -49,9 +49,9 @@ public class Engine {
      * afterwards. Cache on return.
      * @param state the state to evaluate
      * @param depth plies to search (0 means compute heuristic on this position)
-     * @return same state that was passed in, but decorated with the evaluation.
+     * @return the evaluation of this state, and the best move that achieves that evaluation
      */
-    public EvaluatedGameState evaluate(GameState state, int depth) {
+    public EvaluatedGameState evaluate(GameState state, int depth) throws Exception {
         final Player nowPlaying = state.nowPlaying();
         if (depth == 0) {
             return new EvaluatedGameState(state, this.evaluator.evaluate(state));
@@ -61,50 +61,27 @@ public class Engine {
         final List<GameState> possibleMoves = state.possibleMoves();
         // Shallow-evaluate them and store them in a heap.
         final Queue<EvaluatedGameState> shallowEvaluatedNextMoves =
-                new PriorityQueue<>(bestForPlayer(nowPlaying));
+                new PriorityQueue<>(bestIsLeast(nowPlaying));
         for (GameState child : possibleMoves) {
             shallowEvaluatedNextMoves.offer(new EvaluatedGameState(child, this.evaluator.evaluate(child)));
         }
 
-        // Deeply evaluate the top variations.
+        // Mutual recursion with trans table to go deeper
         int variationsLeft = this.topNVariations;
+        GameState bestNextMove = shallowEvaluatedNextMoves.poll().getBestMove();
         Evaluation evaluationOfBestMove = shallowEvaluatedNextMoves.poll().getEvaluation();
         while (!shallowEvaluatedNextMoves.isEmpty() && variationsLeft-- > 0) {
-            final GameState possibleMove = shallowEvaluatedNextMoves.poll().getState();
-            final EvaluatedGameState opponentsBestMove = this.bestMove(possibleMove, depth - 1);
-            if (opponentsBestMove.getEvaluation().getScores().get(nowPlaying)
+            final GameState possibleMove = shallowEvaluatedNextMoves.poll().getBestMove();
+            final EvaluatedGameState childEval = this.transpositionTable.get(
+                    new EvaluationTask(possibleMove, depth - 1));
+
+            if (childEval.getEvaluation().getScores().get(nowPlaying)
                     >= evaluationOfBestMove.getScores().get(nowPlaying)) {
-                evaluationOfBestMove = opponentsBestMove.getEvaluation();
+                bestNextMove = possibleMove;
+                evaluationOfBestMove = childEval.getEvaluation();
             }
         }
 
-        return new EvaluatedGameState(state, evaluationOfBestMove);
-    }
-
-    /**
-     * Choose the best next move.
-     * @param state state the choose the best move for
-     * @param depth how many plies to look (0 means just look at immediate children)
-     * @return best next move, with evaluation.
-     */
-    public EvaluatedGameState bestMove(GameState state, final int depth) {
-        if (state.isOver()) {
-            return new EvaluatedGameState(state, this.evaluator.evaluate(state));
-        }
-
-        try {
-            final Player nowPlaying = state.nowPlaying();
-            final Comparator<EvaluatedGameState> comp = bestForPlayer(nowPlaying);
-            final List<EvaluationTask> possibleMoves =
-                    state.possibleMoves().stream().map(g -> new EvaluationTask(g, depth)).collect(Collectors.toList());
-            final Map<EvaluationTask, EvaluatedGameState> evaluatedStates =
-                    this.transpositionTable.getAll(possibleMoves);
-            return evaluatedStates.entrySet().stream()
-                    .max((entry1, entry2) -> comp.compare(entry1.getValue(), entry2.getValue()))
-                    .get()
-                    .getValue();
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+        return new EvaluatedGameState(bestNextMove, evaluationOfBestMove);
     }
 }

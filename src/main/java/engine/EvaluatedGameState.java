@@ -4,6 +4,6 @@ import lombok.Value;
 
 @Value
 public class EvaluatedGameState {
-    final GameState state;
+    final GameState bestMove;
     final Evaluation evaluation;
 }
