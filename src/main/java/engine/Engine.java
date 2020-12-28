@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class Engine {
     public static final int CONCURRENCY_LEVEL = 8;
-    public static final int TRANSPOSITION_CACHE_SIZE = 5;
     /**
      * Heuristic to evaluate a single position
      */
@@ -24,10 +23,16 @@ public class Engine {
     /**
      * Cache position evaluations.
      */
-    final LoadingCache<EvaluationTask, EvaluatedGameState> transpositionTable = this.initializeCache();
+    final LoadingCache<EvaluationTask, EvaluatedGameState> transpositionTable;
 
-    private LoadingCache<EvaluationTask, EvaluatedGameState> initializeCache() {
-        return CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL).maximumSize(TRANSPOSITION_CACHE_SIZE)
+    public Engine(BoardEvaluator evaluator, int topNVariations, int cacheSize) {
+        this.evaluator = evaluator;
+        this.topNVariations = topNVariations;
+        this.transpositionTable = this.initializeCache(cacheSize);
+    }
+
+    private LoadingCache<EvaluationTask, EvaluatedGameState> initializeCache(int cacheSize) {
+        return CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL).maximumSize(cacheSize)
                 .build(new CacheLoader<>() {
             @Override
             public EvaluatedGameState load(EvaluationTask key) throws Exception {
