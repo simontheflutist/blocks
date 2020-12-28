@@ -10,12 +10,20 @@ import model.piece.Piece;
 import model.player.Player;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class GameState {
+    static final Map<Piece, List<Piece>> dihedralOrbit = generateDihedralOrbits();
+
+    private static Map<Piece, List<Piece>> generateDihedralOrbits() {
+        ImmutableMap.Builder<Piece, List<Piece>> builder = ImmutableMap.builder();
+        for (Piece piece : StandardPieces.ALL_PIECES) {
+            List<Piece> orbit = new ArrayList<>(piece.getDihedralOrbit());
+            builder.put(piece, orbit);
+        }
+        return builder.build();
+    }
+
     static final ImmutableList<Player> STARTING_ORDER =
             ImmutableList.of(Player.A, Player.B, Player.C, Player.D);
     static final ImmutableMap<Player, ImmutableList<Piece>> ALL_PIECES_UNPLAYED =
@@ -66,11 +74,15 @@ public class GameState {
                 final Player nowPlaying = this.nowPlaying();
                 final ImmutableList<Piece> pieces = this.unplayedPieces.get(nowPlaying);
 
-                for (int k = 0, getSize = pieces.size(); k < getSize; k++) {
-                    Piece piece = pieces.get(k);
+                if (pieces == null) {
+                    return ImmutableList.of(this.pass());
+                }
 
-                    for (Piece transformedPiece : piece.getDihedralOrbit()) {
-                        final Optional<Board> moveAttempt = this.board.move(i, j, transformedPiece, nowPlaying);
+                for (int k = 0, getSize = pieces.size(); k < getSize; k++) {
+
+                    for (Piece transformedPiece : dihedralOrbit.get(pieces.get(k))) {
+                        final Optional<Board> moveAttempt =
+                                this.board.move(i, j, transformedPiece, nowPlaying);
                         if (moveAttempt.isEmpty()) {
                             continue;
                         }

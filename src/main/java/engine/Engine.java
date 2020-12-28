@@ -62,6 +62,7 @@ public class Engine {
      */
     public EvaluatedGameState evaluate(GameState state, int depth, boolean parallel) throws Exception {
         final Player nowPlaying = state.nowPlaying();
+
         if (depth == 0) {
             return new EvaluatedGameState(state, this.evaluator.evaluate(state));
         }
