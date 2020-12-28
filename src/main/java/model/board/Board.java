@@ -276,4 +276,24 @@ public class Board {
         queue.remove(object);
         queue.offer(object);
     }
+
+    /**
+     * Equals() and HashCode are important for transposition tables!
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Board board1 = (Board) o;
+        return nRows == board1.nRows
+                && nCols == board1.nCols
+                && Arrays.deepEquals(board, board1.board)
+                && Objects.equals(playerToStartingCorner, board1.playerToStartingCorner)
+                && Objects.equals(nSquaresOccupied, board1.nSquaresOccupied);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(board);
+    }
 }

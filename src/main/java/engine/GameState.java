@@ -9,10 +9,7 @@ import model.board.Board;
 import model.piece.Piece;
 import model.player.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -99,50 +96,6 @@ public class GameState {
         return this.nextPlayers.isEmpty();
     }
 
-    public GameState randomNextMove(Random random) {
-        final List<GameState> possibleMoves = this.possibleMoves();
-        return possibleMoves.get(random.nextInt(possibleMoves.size()));
-    }
-
-    public GameState bestMove(BiFunction<GameState, GameState, Double> heuristic, int depth, double pruneFactor) {
-        if (depth == 0) {
-            return this;
-        }
-
-        final List<GameState> possibleMoves = this.possibleMoves();
-        final List<Double> prelimEvals = possibleMoves.stream()
-                .map(state -> heuristic.apply(this, state))
-                .sorted()
-                .collect(Collectors.toList());
-        final double minEval = prelimEvals.get((int) (prelimEvals.size() * pruneFactor));
-
-//        if (depth == 2) {
-//            System.out.println("hey");
-//        }
-        final List<Double> evaluations = possibleMoves.parallelStream()
-//                .filter(state -> heuristic.apply(this, state) >= minEval)
-                .map(state -> heuristic.apply(this, state.bestMove(heuristic, depth - 1, pruneFactor)))
-                .collect(Collectors.toList());
-
-        // do this using BoundedExecutor instead
-//        for (GameState state : possibleMoves) {
-//            final GameState nextBestMove = state.bestMove(heuristic, depth - 1, pruneFactor);
-//            evaluations.add(heuristic.apply(nextBestMove));
-//        }
-
-        // Find highest evaluation
-        int ind = 0;
-        double best = Double.MIN_VALUE;
-        for (int i = 0; i < evaluations.size(); i++) {
-            if (evaluations.get(i) > best) {
-                best = evaluations.get(i);
-                ind = i;
-            }
-        }
-
-        return possibleMoves.get(ind);
-    }
-
     private GameState createChildState(int pieceMoved, Board resultingBoard) {
         // New Board
         final Board board = resultingBoard;
@@ -190,5 +143,23 @@ public class GameState {
         return "Turn " + this.turnNumber + ", \"" + this.nowPlaying().getDisplayName()
                 + "\" to play:\n" + this.board.toArt() +
                 "\nSquares occupied: " + this.board.getNSquaresOccupied();
+    }
+
+    /**
+     * Used for T-table, so turn number not taken int account.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GameState gameState = (GameState) o;
+        return Objects.equals(board, gameState.board)
+                && Objects.equals(nextPlayers, gameState.nextPlayers)
+                && Objects.equals(unplayedPieces, gameState.unplayedPieces);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, nextPlayers, unplayedPieces);
     }
 }

@@ -1,5 +1,7 @@
 package engine;
 
+import engine.evaluators.MaterialEvaluator;
+
 import java.util.Optional;
 import java.util.Random;
 
@@ -8,18 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameStateTest {
     public static void main(String[] args) {
         GameState game = GameState.newGame();
+        Engine engine = new Engine(new MaterialEvaluator(), 10);
+        Random random = new Random();
 
-        for (;;) {
-            System.out.println(game + "\n");
-            game = game.bestMove((ours, theirs) ->
-                    0.0d + theirs.getBoard().getNSquaresOccupied().get(ours.nowPlaying()),
-                    3, 0.0);
-            if (game.isOver()) {
-                break;
-            }
 
-        }
-        System.out.println(game);
+
+//        for (;;) {
+//            System.out.println(game + "\n");
+//            game =
+//
+//        }
+//        System.out.println(game);
     }
 
 
