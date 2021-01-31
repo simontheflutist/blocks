@@ -302,8 +302,12 @@ public class Board {
         // For player's mask:
         Boolean[] ownMask = stickyMask.get(player);
 
-        // (r, c) no longer sticky.
+        // (r, c) and its cardinal neighbors are no longer sticky.
         put(ownMask, false, r, c, this.nRows);
+        putIfAllowedAndNotOccupied(ownMask, false, r + 0, c + 1, this.nRows, this.nCols, player);
+        putIfAllowedAndNotOccupied(ownMask, false, r + 0, c - 1, this.nRows, this.nCols, player);
+        putIfAllowedAndNotOccupied(ownMask, false, r + 1, c + 0, this.nRows, this.nCols, player);
+        putIfAllowedAndNotOccupied(ownMask, false, r - 1, c - 0, this.nRows, this.nCols, player);
 
         // For other player's masks, (r,c) is no longer sticky.
         for (Player p : Player.values()) {
