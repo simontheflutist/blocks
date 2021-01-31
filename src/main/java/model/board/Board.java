@@ -22,6 +22,7 @@ public class Board {
     // Strided array for which player has a piece here
     final Player[] board;
     // Strided array of whether a location is sticky
+    @Getter
     private EnumMap<Player, Boolean[]> stickyMask;
 
     private static final <T, U extends T> T get(U[] board, int row, int col, int nRows) {
