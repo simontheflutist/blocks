@@ -128,12 +128,6 @@ class BoardTest {
     void move_firstMoveSuccessful() {
         Optional<Board> result = largeEmptyBoard.move(0, 0, LPiece, Player.A);
         assertTrue(result.isPresent());
-        Board resultBoard = result.get();
-
-        assertEquals(Player.A, resultBoard.board[0][0]);
-        assertEquals(Player.A, resultBoard.board[1][0]);
-        assertEquals(Player.A, resultBoard.board[1][1]);
-        assertEquals(Player.NO_PLAYER, resultBoard.board[0][1]);
     }
 
     @Test

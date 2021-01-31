@@ -8,6 +8,7 @@ import model.player.Player;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Models the state of the board: each square is either occupied by a player or empty. Immutable
@@ -17,7 +18,25 @@ import java.util.stream.Collectors;
 public class Board {
     final int nRows;
     final int nCols;
-    final Player[][] board;
+
+    final Player[] board;
+
+    private static final Player get(Player[] board, int row, int col, int nRows) {
+        return board[row * nRows + col];
+    }
+
+    private static final void put(Player[] board, Player player, int row, int col, int nRows) {
+        board[row * nRows + col] = player;
+    }
+
+    private final Player get(int row, int col) {
+        return get(this.board, row, col, this.nRows);
+    }
+
+    private final void put(Player player, int row, int col) {
+        put(this.board, player, row, col, this.nRows);
+    }
+
     final Map<Player, int[]> playerToStartingCorner;
     @Getter
     final Map<Player, Integer> nSquaresOccupied;
@@ -49,20 +68,17 @@ public class Board {
                 .build();
     }
 
-    private Player[][] emptyBoard() {
-        final Player[][] board = new Player[this.nRows][this.nCols];
-        for (int i = 0; i < this.nRows; i++) {
-            for (int j = 0; j < this.nCols; j++) {
-                board[i][j] = Player.NO_PLAYER;
-            }
-        }
+    private Player[] emptyBoard() {
+        final Player[] board = new Player[this.nRows * this.nCols];
+        Arrays.fill(board, Player.NO_PLAYER);
         return board;
     }
 
     public String toArt() {
-        return Arrays.stream(board)
-                .map(row ->
-                        Arrays.stream(row)
+        return IntStream.range(0, this.nRows)
+                .mapToObj(r ->
+                        IntStream.range(0, this.nCols)
+                                .mapToObj(c -> this.get(r, c))
                                 .map(Player::getDisplayName)
                                 .collect(Collectors.joining("")))
                 .collect(Collectors.joining("\n"));
@@ -87,7 +103,7 @@ public class Board {
                 return false;
             }
 
-            if (board[r][c] != Player.NO_PLAYER) {
+            if (this.get(r, c) != Player.NO_PLAYER) {
                 return false;
             }
         }
@@ -170,8 +186,8 @@ public class Board {
     }
 
     // JVM pls inline :)
-    private final boolean occupiedBy(int i, int j, Player player) {
-        return this.board[i][j] == player;
+    private final boolean occupiedBy(int r, int c, Player player) {
+        return this.get(r, c) == player;
     }
 
     /**
@@ -218,14 +234,12 @@ public class Board {
 
     Board boardAfterMove(int i, int j, Piece piece, Player player) {
         // New array
-        final Player[][] newBoard = new Player[this.nRows][this.nCols];
-        for (int r = 0; r < this.nRows; r++) {
-            newBoard[r] = Arrays.copyOf(this.board[r], this.nCols);
-        }
+        final Player[] newBoard = Arrays.copyOf(this.board, this.board.length);
+
         for (int k = 0; k < piece.nSquares; k++) {
             final int r = i + piece.rowLocations.get(k);
             final int c = j + piece.colLocations.get(k);
-            newBoard[r][c] = player;
+            put(newBoard, player, r, c, this.nRows);
         }
 
         // New counts
