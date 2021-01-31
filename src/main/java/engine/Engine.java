@@ -1,17 +1,12 @@
 package engine;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import lombok.AllArgsConstructor;
 import model.player.Player;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 @AllArgsConstructor
 public class Engine {
-    public static final int CONCURRENCY_LEVEL = 8;
     /**
      * Heuristic to evaluate a single position
      */
@@ -20,29 +15,6 @@ public class Engine {
      * Only explore at most this many variations
      */
     final int topNVariations;
-    /**
-     * Cache position evaluations.
-     */
-    final LoadingCache<EvaluationTask, EvaluatedGameState> transpositionTable;
-
-    public Engine(BoardEvaluator evaluator, int topNVariations, int cacheSize) {
-        this.evaluator = evaluator;
-        this.topNVariations = topNVariations;
-        this.transpositionTable = this.initializeCache(cacheSize);
-    }
-
-    private LoadingCache<EvaluationTask, EvaluatedGameState> initializeCache(int cacheSize) {
-        return CacheBuilder.newBuilder()
-                .concurrencyLevel(CONCURRENCY_LEVEL)
-                .initialCapacity(cacheSize)
-                .maximumSize(cacheSize)
-                .build(new CacheLoader<>() {
-            @Override
-            public EvaluatedGameState load(EvaluationTask key) throws Exception {
-                return Engine.this.evaluate(key.getGameState(), key.getDepth(), false);
-            }
-        });
-    }
 
     /**
      * Sort by highest eval first.
@@ -59,7 +31,7 @@ public class Engine {
      * @param depth plies to search (0 means compute heuristic on this position)
      * @return the evaluation of this state, and the best move that achieves that evaluation
      */
-    public EvaluatedGameState evaluate(GameState state, int depth, boolean parallel) throws Exception {
+    public EvaluatedGameState evaluate(GameState state, int depth, boolean parallel)  {
         final Player nowPlaying = state.nowPlaying();
 
         if (depth == 0) {
@@ -72,15 +44,11 @@ public class Engine {
         // greediness on a low depth.
         return (parallel ? candidates.parallelStream() : candidates.stream())
                 .map(candidate -> {
-                    try {
-                        // Recursion to go one level deeper
-                        EvaluatedGameState deeper =
-                                transpositionTable.get(new EvaluationTask(candidate.getBestMove(), depth - 1));
-                        // Pair candidate move with deep evaluation
-                        return new EvaluatedGameState(candidate.getBestMove(), deeper.getEvaluation());
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
+                    // Recursion to go one level deeper
+                    EvaluatedGameState deeper =
+                            this.evaluate(candidate.getBestMove(), depth - 1, false);
+                    // Pair candidate move with deep evaluation
+                    return new EvaluatedGameState(candidate.getBestMove(), deeper.getEvaluation());
                 })
                 .max(Comparator.comparingDouble(
                         evaluatedGameState -> evaluatedGameState.getEvaluation().getScores().get(nowPlaying)))

@@ -1,19 +1,15 @@
 package engine;
 
-import engine.evaluators.MaterialEvaluator;
 import engine.evaluators.MaterialMinusOthersEvaluator;
 
-import java.util.Optional;
 import java.util.Random;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GameStateTest {
     public static void main(String[] args) throws Exception {
         GameState game = GameState.newGame();
         Random random = new Random();
         BoardEvaluator evaluator = new MaterialMinusOthersEvaluator(random);
-        Engine engine = new Engine(evaluator, 4, 500000);
+        Engine engine = new Engine(evaluator, 4);
 
 
         while (!game.isOver()) {
