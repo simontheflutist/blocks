@@ -9,7 +9,7 @@ class GameStateTest {
         GameState game = GameState.newGame();
         Random random = new Random();
         BoardEvaluator evaluator = new MaterialMinusOthersEvaluator(random);
-        Engine engine = new Engine(evaluator, 4);
+        Engine engine = new Engine(evaluator, 5);
 
 
         while (!game.isOver()) {

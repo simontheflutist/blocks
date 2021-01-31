@@ -105,37 +105,27 @@ public class Board {
         // Idea: generate all the cardinal (north, south, east, west) neighbor squares of this piece.
         // Deduplicate them and then query them to make sure that none of them are occupied by this player.
 
-        // Use a PQ with lexicographic sort to be nice to memory :)
-        final Queue<int[]> locations = new PriorityQueue<>(Board::lexicographicComparing);
         // Add all cardinal neighbors
         for (int k = 0; k < piece.nSquares; k++) {
             // Row and column by displacement
             final int r = i + piece.rowLocations.get(k);
             final int c = j + piece.colLocations.get(k);
 
-            if (r + 1 < this.nRows) {
-                addUnique(locations, new int[]{r + 1, c});
+            if (r + 1 < this.nRows && occupiedBy(r + 1, c, player)) {
+                return false;
             }
-            if (r - 1 >= 0) {
-                addUnique(locations, new int[]{r - 1, c});
-            }
-            if (c + 1 < this.nCols) {
-                addUnique(locations, new int[]{r, c + 1});
-            }
-            if (c - 1 >= 0) {
-                addUnique(locations, new int[]{r, c - 1});
-            }
-        }
 
-        // Drain the queue to check no illegal contact
-        for (int[] location = locations.poll(); location != null; location = locations.poll()) {
-            final int r = location[0];
-            final int c = location[1];
-
-            if (this.board[r][c] == player) {
+            if (r - 1 >= 0 && occupiedBy(r - 1, c, player)) {
+                return false;
+            }
+            if (c + 1 < this.nCols && occupiedBy(r, c + 1, player)) {
+                return false;
+            }
+            if (c - 1 >= 0 && occupiedBy(r, c - 1, player)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -151,7 +141,6 @@ public class Board {
         // Same idea as doesNotTouchSideOfOwnPiece, except this time we are generating "sticky" squares
         // that would have to have one of the player's own squares.
 
-        final Queue<int[]> locations = new PriorityQueue<>(Board::lexicographicComparing);
         // Add all sticky squares (+1, +1), (+1, -1), etc.
         for (int k = 0; k < piece.nSquares; k++) {
             // Row and column by displacement
@@ -159,34 +148,30 @@ public class Board {
             final int c = j + piece.colLocations.get(k);
 
             if (r + 1 < this.nRows) {
-                if (c + 1 < this.nCols) {
-                    addUnique(locations, new int[]{r + 1, c + 1});
+                if (c + 1 < this.nCols && occupiedBy(r + 1, c + 1, player)) {
+                    return true;
                 }
-                if (c - 1 >= 0) {
-                    addUnique(locations, new int[]{r + 1, c - 1});
+                if (c - 1 >= 0 && occupiedBy(r + 1, c - 1, player)) {
+                    return true;
                 }
             }
 
             if (r - 1 >= 0) {
-                if (c + 1 < this.nCols) {
-                    addUnique(locations, new int[]{r - 1, c + 1});
+                if (c + 1 < this.nCols && occupiedBy(r - 1, c + 1, player)) {
+                    return true;
                 }
-                if (c - 1 >= 0) {
-                    addUnique(locations, new int[]{r - 1, c - 1});
+                if (c - 1 >= 0 && occupiedBy(r - 1, c - 1, player)) {
+                    return true;
                 }
             }
         }
 
-        // Check if a sticky square is already occupied by the player.
-        for (int[] location = locations.poll(); location != null; location = locations.poll()) {
-            final int r = location[0];
-            final int c = location[1];
-
-            if (this.board[r][c] == player) {
-                return true;
-            }
-        }
         return false;
+    }
+
+    // JVM pls inline :)
+    private final boolean occupiedBy(int i, int j, Player player) {
+        return this.board[i][j] == player;
     }
 
     /**
@@ -270,11 +255,6 @@ public class Board {
 
     boolean isFirstMove(Player player) {
         return this.nSquaresOccupied.get(player) == 0;
-    }
-
-    static <T> void addUnique(Queue<T> queue, T object) {
-        queue.remove(object);
-        queue.offer(object);
     }
 
     /**
