@@ -8,7 +8,6 @@ import model.player.Player;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class Engine {
@@ -62,43 +61,33 @@ public class Engine {
      */
     public EvaluatedGameState evaluate(GameState state, int depth, boolean parallel) throws Exception {
         final Player nowPlaying = state.nowPlaying();
-        if (nowPlaying == Player.C && depth == 5) {
-            System.out.printf("");
-        }
 
         if (depth == 0) {
             return new EvaluatedGameState(state, this.evaluator.evaluate(state));
         }
 
-        final List<EvaluatedGameState> candidates = getBestShallowEvaluatedNextMoves(state, nowPlaying);
-        final List<Evaluation> deepEvaluations = (parallel ? candidates.parallelStream() : candidates.stream())
-                .map(egs -> {
+        // Get candidate moves.
+        final List<EvaluatedGameState> candidates = getCandidateMoves(state, nowPlaying);
+        // Deeply evaluate them and return the best. This is hard to unit-test, so I test this by checking for
+        // greediness on a low depth.
+        return (parallel ? candidates.parallelStream() : candidates.stream())
+                .map(candidate -> {
                     try {
-                        return transpositionTable.get(new EvaluationTask(egs.getBestMove(), depth - 1));
+                        // Recursion to go one level deeper
+                        EvaluatedGameState deeper =
+                                transpositionTable.get(new EvaluationTask(candidate.getBestMove(), depth - 1));
+                        // Pair candidate move with deep evaluation
+                        return new EvaluatedGameState(candidate.getBestMove(), deeper.getEvaluation());
                     } catch (ExecutionException e) {
                         throw new RuntimeException(e);
                     }
                 })
-                .map(EvaluatedGameState::getEvaluation)
-                .collect(Collectors.toList());
-
-        GameState bestMove = candidates.get(0).getBestMove();
-        Evaluation evalOfBestMove = deepEvaluations.get(0);
-        double bestEval = evalOfBestMove.getScores().get(nowPlaying);
-        for (int i = 1; i < candidates.size(); i++) {
-            EvaluatedGameState candidate = candidates.get(i);
-            double eval = deepEvaluations.get(i).getScores().get(nowPlaying);
-            if (eval > bestEval) {
-                bestEval = eval;
-                evalOfBestMove = deepEvaluations.get(i);
-                bestMove = candidate.getBestMove();
-            }
-        }
-
-        return new EvaluatedGameState(bestMove, evalOfBestMove);
+                .max(Comparator.comparingDouble(
+                        evaluatedGameState -> evaluatedGameState.getEvaluation().getScores().get(nowPlaying)))
+                .get();
     }
 
-    private List<EvaluatedGameState> getBestShallowEvaluatedNextMoves(GameState state, Player nowPlaying) {
+    private List<EvaluatedGameState> getCandidateMoves(GameState state, Player nowPlaying) {
         // Enumerate the possible moves of the next player.
         final List<GameState> possibleMoves = state.possibleMoves();
         // Shallow-evaluate them and store them in a heap.

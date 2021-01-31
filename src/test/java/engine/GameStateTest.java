@@ -13,11 +13,11 @@ class GameStateTest {
         GameState game = GameState.newGame();
         Random random = new Random();
         BoardEvaluator evaluator = new MaterialMinusOthersEvaluator(random);
-        Engine engine = new Engine(evaluator, 8, 500000);
+        Engine engine = new Engine(evaluator, 4, 500000);
 
 
         while (!game.isOver()) {
-            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 5, true);
+            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 4, true);
             game = evaluatedGameState.getBestMove();
 //            System.out.println("Table size: " + engine.transpositionTable.size());
             System.out.println(game);
