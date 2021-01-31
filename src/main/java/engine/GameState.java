@@ -68,20 +68,28 @@ public class GameState {
      */
     public List<GameState> possibleMoves() {
         final List<GameState> moves = new ArrayList<>();
-        // Every location. TODO: cache locations that should not be searched
-        for (int i = 0; i < N_ROWS; i++) {
-            for (int j = 0; j < N_COLS; j++) {
-                final Player nowPlaying = this.nowPlaying();
-                final ImmutableList<Piece> pieces = this.unplayedPieces.get(nowPlaying);
+        final Player nowPlaying = this.nowPlaying();
+        final ImmutableList<Piece> pieces = this.unplayedPieces.get(nowPlaying);
 
-                if (pieces == null) {
-                    return ImmutableList.of(this.pass());
-                }
+        if (pieces == null) {
+            return ImmutableList.of(this.pass());
+        }
 
-                for (int k = 0, getSize = pieces.size(); k < getSize; k++) {
-                    for (Piece transformedPiece : dihedralOrbit.get(pieces.get(k))) {
+        // Find all sticky locations that a sticky location of a new piece can anchor to.
+        for (final int[] boardSticky : this.board.getStickyLocationsForPlayer(nowPlaying)) {
+            // Go through all pieces. We need this loop because k is the index used to remove a piece from this
+            // player's hand.
+            for (int k = 0; k < pieces.size(); k++) {
+                final Piece piece = pieces.get(k);
+                for (final Piece transformedPiece : dihedralOrbit.get(piece)) {
+                    for (int l = 0; l < piece.nSquares; l++) {
                         final Optional<Board> moveAttempt =
-                                this.board.move(i, j, transformedPiece, nowPlaying);
+                                this.moveToAlignSticky(boardSticky,
+                                        new int[] {
+                                                piece.rowLocations.get(l),
+                                                piece.colLocations.get(l)},
+                                        transformedPiece, nowPlaying);
+
                         if (moveAttempt.isEmpty()) {
                             continue;
                         }
@@ -97,6 +105,15 @@ public class GameState {
         } else {
             return moves;
         }
+    }
+
+    private Optional<Board> moveToAlignSticky(int[] boardSticky, int[] pieceSticky, Piece piece, Player nowPlaying) {
+        // Translation equation is: pieceSticky - boardSticky = pieceAnchor - boardAnchor
+        // For example, for (1,1) on the piece to land on (0,0) on the board, the displacement is (-1,-1)
+        int row = boardSticky[0] - pieceSticky[0];
+        int col = boardSticky[1] - pieceSticky[1];
+
+        return this.board.move(row, col, piece, nowPlaying);
     }
 
     private GameState pass() {

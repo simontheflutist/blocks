@@ -14,7 +14,7 @@ class GameStateTest {
 
 
         while (!game.isOver()) {
-            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 3, true);
+            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 3, false);
             game = evaluatedGameState.getBestMove();
 //            System.out.println("Table size: " + engine.transpositionTable.size());
             System.out.println(game);
