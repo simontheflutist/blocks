@@ -1,5 +1,6 @@
 package engine;
 
+import engine.evaluators.MaterialEvaluator;
 import engine.evaluators.MaterialMinusOthersEvaluator;
 
 import java.util.Random;
@@ -8,12 +9,12 @@ class GameStateTest {
     public static void main(String[] args) throws Exception {
         GameState game = GameState.newGame();
         Random random = new Random();
-        BoardEvaluator evaluator = new MaterialMinusOthersEvaluator(random);
-        Engine engine = new Engine(evaluator, 5);
+        BoardEvaluator evaluator = new MaterialEvaluator(random);
+        Engine engine = new Engine(evaluator, 100);
 
 
         while (!game.isOver()) {
-            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 4, false);
+            EvaluatedGameState evaluatedGameState = engine.evaluate(game, 3, true);
             game = evaluatedGameState.getBestMove();
 //            System.out.println("Table size: " + engine.transpositionTable.size());
             System.out.println(game);
